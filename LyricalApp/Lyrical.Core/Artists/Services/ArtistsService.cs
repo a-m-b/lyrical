@@ -15,6 +15,8 @@ namespace Lyrical.Core.Artists.Services
 
         public async Task<IEnumerable<string>> GetArtistsTracks(GetArtistsSongs query)
         {
+            Console.WriteLine($"Attempting to find artist {query.ArtistName}");
+
             if (string.IsNullOrEmpty(query.ArtistName))
             {
                 throw new ArtistNotProvidedException();
@@ -29,16 +31,21 @@ namespace Lyrical.Core.Artists.Services
 
             var albumIds = await _artistsRepository.GetAlbumIds(artistId);
 
-            var artistSongs = new List<string>();
+            var tracks = new List<string>();
 
             foreach (var albumId in albumIds)
             {
                 var trackNames = await _artistsRepository.GetTrackNames(albumId);
 
-                artistSongs.AddRange(trackNames);
-            }    
+                tracks.AddRange(trackNames);
+            }
 
-            return artistSongs;
+            if (!tracks.Any())
+            {
+                throw new ArtistNotFoundException(query.ArtistName);
+            }
+
+            return tracks;
         }
     }
 }

@@ -8,6 +8,7 @@ using Lyrical.Infrastructure.Spotify.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Lyrical
 {
@@ -20,6 +21,10 @@ namespace Lyrical
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     IConfiguration configuration = hostContext.Configuration;
@@ -27,7 +32,7 @@ namespace Lyrical
                     services.AddHttpClient("Lyrics", c =>
                     {
                         c.BaseAddress = new Uri(configuration.GetSection($"LyricsOvh:Url").Value);
-                        c.Timeout = new TimeSpan(0, 0, 10);
+                        c.Timeout = new TimeSpan(0, 0, 20);
                     });
 
                     services.AddHostedService<Worker>();

@@ -1,6 +1,7 @@
 ﻿using Lyrical.Core.Lyrics.Exceptions;
 using Lyrical.Core.Lyrics.Messages.Queries;
 using Lyrical.Core.Lyrics.Repositories;
+using System.Threading.Tasks;
 
 namespace Lyrical.Core.Lyrics.Services
 {
@@ -13,30 +14,45 @@ namespace Lyrical.Core.Lyrics.Services
             _lyricsRepository = lyricsRepository;
         }
 
-        public async Task<int> GetAverageLyrics(GetAverageLyrics query)
+        public async Task<int> GetTrackWordAverage(GetTrackLyricAverage query)
         {
             var trackWordCounts = new List<int>();
 
-            foreach (var trackName in query.Tracks.Take(20))
-            {
-                var lyrics = await _lyricsRepository.GetLyrics(query.ArtistName, trackName);
+            var trackWordCountQuery = 
+                from trackName in query.Tracks.Take(20)
+                select GetTrackWordCount(query.ArtistName, trackName);
 
-                if (string.IsNullOrEmpty(lyrics))
+            var trackWordCountTasks = trackWordCountQuery.ToList();
+
+            while (trackWordCountTasks.Any())
+            {
+                var finishedTask = await Task.WhenAny(trackWordCountTasks);
+                trackWordCountTasks.Remove(finishedTask);
+                var result = await finishedTask;
+                if (result > 0)
                 {
-                    continue;
+                    trackWordCounts.Add(result);
                 }
-
-                var wordCount = lyrics.Split(' ');
-
-                trackWordCounts.Add(wordCount.Length);
             }
 
-            if (!trackWordCounts.Any())
+            return trackWordCounts.Any() ? trackWordCounts.Sum() / trackWordCounts.Count : 0;
+        }
+
+        private async Task<int> GetTrackWordCount(string artistName, string trackName)
+        {
+            var lyrics = await _lyricsRepository.GetLyrics(artistName, trackName);
+
+            if (string.IsNullOrEmpty(lyrics))
             {
-                throw new NoLyricsFoundException(query.ArtistName);
+                Console.WriteLine($"Could not retrieved lyrics for track: {trackName}");
+                return 0;
             }
 
-            return trackWordCounts.Sum() / trackWordCounts.Count();
+            Console.WriteLine($"Retrieved lyrics for track: {trackName}");
+
+            var wordCount = lyrics.Split(' ');
+
+            return wordCount.Length;
         }
     }
 }

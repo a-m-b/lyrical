@@ -5,12 +5,6 @@ using Lyrical.Core.Lyrics.Exceptions;
 using Lyrical.Core.Lyrics.Messages.Queries;
 using Lyrical.Core.Lyrics.Services;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lyrical
 {
@@ -36,42 +30,38 @@ namespace Lyrical
             try
             {
                 var trackNames = await _artistsService.GetArtistsTracks(new GetArtistsSongs() { ArtistName = artistName });
+                var averageWords = await _lyricsService.GetTrackWordAverage(new GetTrackLyricAverage() { ArtistName = artistName, Tracks = trackNames });
 
-                if (!trackNames.Any())
-                {
-                    SendMessage("No tracks found");
-                }
-
-                var averageWords = await _lyricsService.GetAverageLyrics(new GetAverageLyrics() { ArtistName = artistName, Tracks = trackNames });
-
-                SendMessage($"The average word count is {averageWords}");
+                Console.WriteLine($"The average word count is {averageWords}");
             }
             catch (ArtistNotProvidedException ex)
             {
-                SendMessage(ex.Message);
+                SendErrorMessage(ex.Message);
             }
             catch (ArtistNotFoundException ex)
             {
-                SendMessage(ex.Message);
+                SendErrorMessage(ex.Message);
+            }
+            catch (ArtistHasNoTracksException ex)
+            {
+                SendErrorMessage(ex.Message);
             }
             catch (NoLyricsFoundException ex)
             {
-                SendMessage(ex.Message);
+                SendErrorMessage(ex.Message);
             }
             catch (Exception ex)
             {
-                SendMessage("There was an error!");
-                SendMessage(ex.Message);
+                SendErrorMessage(ex.Message);
             }
 
             _host.StopAsync();
         }
 
-        private void SendMessage(string text)
+        private void SendErrorMessage(string error)
         {
-            Console.WriteLine("####");
-            Console.WriteLine($"#### {text}");
-            Console.WriteLine("####");
+            Console.WriteLine("#### ERROR ####");
+            Console.WriteLine(error);
         }
     }
 }

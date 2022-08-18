@@ -1,6 +1,6 @@
 ﻿namespace Lyrical.Core.Lyrics.Messages.Queries
 {
-    public class GetAverageLyrics
+    public class GetTrackLyricAverage
     {
         public string ArtistName { get; set; }
 
