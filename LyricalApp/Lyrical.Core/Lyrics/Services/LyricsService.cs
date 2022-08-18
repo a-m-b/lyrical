@@ -1,7 +1,5 @@
-﻿using Lyrical.Core.Lyrics.Exceptions;
-using Lyrical.Core.Lyrics.Messages.Queries;
+﻿using Lyrical.Core.Lyrics.Messages.Queries;
 using Lyrical.Core.Lyrics.Repositories;
-using System.Threading.Tasks;
 
 namespace Lyrical.Core.Lyrics.Services
 {
